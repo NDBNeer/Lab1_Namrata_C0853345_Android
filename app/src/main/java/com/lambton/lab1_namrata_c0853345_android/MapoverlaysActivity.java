@@ -61,6 +61,7 @@ public class MapoverlaysActivity extends AppCompatActivity implements OnMapReady
     // Marker Labels and current markers
     ArrayList<String> markerlabel = new ArrayList<String>(Arrays.asList("A", "B", "C", "D"));
     final int polygon_sides = 4;
+    final int POINT_DELETE_DISTANCE_THRESHOLD = 50;
     ArrayList<Marker> current_marker = new ArrayList<Marker>();
     ArrayList<Polyline> current_poly_lines = new ArrayList<Polyline>();
     private static final String MAP_VIEW_BUNDLE_KEY = "MapViewBundleKey";
@@ -187,7 +188,8 @@ public class MapoverlaysActivity extends AppCompatActivity implements OnMapReady
         uiSettings.setMapToolbarEnabled(true);
         uiSettings.setCompassEnabled(true);
         uiSettings.setZoomControlsEnabled(true);
-
+        LatLng lat = new LatLng(43.6532, -79.3832);
+        googleMap.moveCamera(CameraUpdateFactory.newLatLng(lat));
         googleMap.setOnMapLongClickListener(this);
         googleMap.setOnMapClickListener(this);
         googleMap.setOnPolygonClickListener(this);
@@ -380,12 +382,39 @@ public class MapoverlaysActivity extends AppCompatActivity implements OnMapReady
     }}}
 
     @Override
-    public void onMapLongClick(@NonNull LatLng latLng) {
-        Log.d("mapclick", "Map Long click" + latLng);
-    }
-    @Override
     public void onMapClick(@NonNull LatLng latLng) {
         Log.d("mapclick", "Map just click" + latLng);
         addmarkertomap(latLng);
     }
+    @Override
+    public void onMapLongClick(@NonNull LatLng latLng) {
+        Log.d("MAP", "Map Long click" + latLng);
+        //clear marker
+        float[] pointADistance = new float[1];
+        float[] pointBDistance = new float[1];
+        float[] pointCDistance = new float[1];
+        float[] pointEDistance = new float[1];
+        Location.distanceBetween(current_marker.get(0).getPosition().latitude, current_marker.get(0).getPosition().longitude,
+                latLng.latitude, latLng.longitude, pointADistance);
+        Location.distanceBetween(current_marker.get(1).getPosition().latitude, current_marker.get(1).getPosition().longitude,
+                latLng.latitude, latLng.longitude, pointBDistance);
+        Location.distanceBetween(current_marker.get(2).getPosition().latitude, current_marker.get(2).getPosition().longitude,
+                latLng.latitude, latLng.longitude, pointCDistance);
+        Location.distanceBetween(current_marker.get(3).getPosition().latitude, current_marker.get(3).getPosition().longitude,
+                latLng.latitude, latLng.longitude, pointEDistance);
+
+        if(pointADistance[0] < POINT_DELETE_DISTANCE_THRESHOLD){
+            current_marker.get(0).remove();
+        }
+        if(pointBDistance[0] < POINT_DELETE_DISTANCE_THRESHOLD){
+            current_marker.get(1).remove();
+        }
+        if(pointCDistance[0] < POINT_DELETE_DISTANCE_THRESHOLD){
+            current_marker.get(2).remove();
+        }
+        if(pointEDistance[0] < POINT_DELETE_DISTANCE_THRESHOLD){
+            current_marker.get(3).remove();
+        }
+    }
+
 }
