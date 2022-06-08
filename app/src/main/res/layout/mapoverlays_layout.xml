@@ -33,6 +33,8 @@
             android:id="@+id/add_location"
             android:layout_width="100dp"
             android:layout_height="wrap_content"
+            android:textColor="@color/white"
+            android:background="@drawable/button_layout"
             android:text="@string/add" />
 
     </LinearLayout>
