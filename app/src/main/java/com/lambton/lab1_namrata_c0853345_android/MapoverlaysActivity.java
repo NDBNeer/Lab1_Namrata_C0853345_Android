@@ -18,6 +18,7 @@ import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.Toolbar;
 
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
@@ -48,6 +49,7 @@ public class MapoverlaysActivity extends AppCompatActivity implements OnMapReady
     Button add_location;
     String str_locationadd;
     LatLng lat_long_add;
+    Toolbar toolbar;
     // Marker Labels and current markers
     final String[] markerlabel = new String[]{"A", "B", "C", "D"};
     final int polygon_sides = 4;
@@ -66,6 +68,8 @@ public class MapoverlaysActivity extends AppCompatActivity implements OnMapReady
         super.onCreate(savedInstanceState);
         setContentView(R.layout.mapoverlays_layout);
         findId();
+        toolbar.setTitle("Map Overlays");
+        setSupportActionBar(toolbar);
         locationPermissionRequest();
         add_location.setOnClickListener(this);
         Bundle mapbundle = null;
@@ -78,6 +82,7 @@ public class MapoverlaysActivity extends AppCompatActivity implements OnMapReady
         mapView.setClickable(true);
     }
     private void findId() {
+        toolbar = findViewById(R.id.toolbar);
         mapView=findViewById(R.id.mapView);
         location_address=findViewById(R.id.location_address);
         add_location=findViewById(R.id.add_location);
