@@ -160,7 +160,7 @@ public class MapoverlaysActivity extends AppCompatActivity implements OnMapReady
     @RequiresApi(api = Build.VERSION_CODES.O)
     @Override
     public void onMapReady(GoogleMap googleMap) {
-        googleMap = googleMap;
+        this.googleMap = googleMap;
         List<Address> addresses = null;
         googleMap.setMinZoomPreference(12);
         // UI settings of map
@@ -171,11 +171,12 @@ public class MapoverlaysActivity extends AppCompatActivity implements OnMapReady
         uiSettings.setMapToolbarEnabled(true);
         uiSettings.setCompassEnabled(true);
         uiSettings.setZoomControlsEnabled(true);
-        if(flag)
-        {
-            Log.d("lat_long_add******",String.valueOf(lat_long_add));
-            addmarkertomap(lat_long_add);
-        }
+           /* if(lat_long_add!=null)
+            {
+                Log.d("lat_long_add******",String.valueOf(lat_long_add));
+                addmarkertomap(lat_long_add);
+            }*/
+
 
     }
     public LatLng getLocationFromAddress(String strAddress) {
@@ -241,16 +242,16 @@ public class MapoverlaysActivity extends AppCompatActivity implements OnMapReady
         lat_long_add =getLocationFromAddress(str_locationadd);
         Log.d("lat_long_add", String.valueOf(lat_long_add));
         flag=true;
-
+        if(lat_long_add!=null)
+        {
+            Log.d("lat_long_add******",String.valueOf(lat_long_add));
+            addmarkertomap(lat_long_add);
+        }
     }
 
     private void addmarkertomap(LatLng lat_long_add) {
+        Log.d("MARKER_ADD","lat_long_add null point" + lat_long_add);
         //adding marker to map
-        MarkerOptions markerOptions = new MarkerOptions();
-        markerOptions.position(lat_long_add);
-        googleMap.addMarker(markerOptions);
-        Geocoder geocoder = new Geocoder(this.getApplicationContext(), Locale.getDefault());
-        Geocoder.isPresent();
         // googleMap.addMarker(new MarkerOptions().position(address).title(addresses.get(0).getAddressLine(0))).showInfoWindow();
         googleMap.addMarker(new MarkerOptions().position(lat_long_add).title("add marker")).showInfoWindow();
         googleMap.moveCamera(CameraUpdateFactory.newLatLng(lat_long_add));
