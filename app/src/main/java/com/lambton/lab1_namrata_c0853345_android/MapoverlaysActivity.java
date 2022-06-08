@@ -61,7 +61,7 @@ public class MapoverlaysActivity extends AppCompatActivity implements OnMapReady
     // Marker Labels and current markers
     ArrayList<String> markerlabel = new ArrayList<String>(Arrays.asList("A", "B", "C", "D"));
     final int polygon_sides = 4;
-    ArrayList<MarkerOptions> current_marker = new ArrayList<MarkerOptions>();
+    ArrayList<Marker> current_marker = new ArrayList<Marker>();
     ArrayList<Polyline> current_poly_lines = new ArrayList<Polyline>();
     private static final String MAP_VIEW_BUNDLE_KEY = "MapViewBundleKey";
     //for poliline
@@ -257,8 +257,35 @@ public class MapoverlaysActivity extends AppCompatActivity implements OnMapReady
     }
     @Override
     public void onPolygonClick(@NonNull Polygon polygon) {
-        googleMap. clear();
+        //googleMap. clear();
         Log.d("map", "Polygon Clicked.!");
+        float totalDistance = 0;
+        // find total distance  A - D
+        for (Polyline polyline: current_poly_lines) {
+            LatLng polylineStart = polyline.getPoints().get(0);
+            LatLng polylineEnd = polyline.getPoints().get(1);
+            float[] results = new float[1];
+            Location.distanceBetween(polylineStart.latitude, polylineStart.longitude,
+                    polylineEnd.latitude, polylineEnd.longitude, results);
+            totalDistance += results[0];
+        }
+
+        Marker centerOneMarker = googleMap.addMarker(new MarkerOptions()
+                .position(getPolygonCenterPoint(polygon.getPoints()))
+                .icon(makeBitmaptoShowDetails(String.valueOf(totalDistance))));
+    }
+
+    private LatLng getPolygonCenterPoint(List<LatLng> polygonPointsList){
+        LatLng centerLatLng = null;
+        LatLngBounds.Builder builder = new LatLngBounds.Builder();
+        for(int i = 0 ; i < polygonPointsList.size() ; i++)
+        {
+            builder.include(polygonPointsList.get(i));
+        }
+        LatLngBounds bounds = builder.build();
+        centerLatLng =  bounds.getCenter();
+
+        return centerLatLng;
     }
 
     public LatLng getPolylineCentroid(Polyline p) {
@@ -308,17 +335,19 @@ public class MapoverlaysActivity extends AppCompatActivity implements OnMapReady
     }
 
     private void addmarkertomap(LatLng lat_long_add) {
+
         String currentMarker = nextmarker();
         if(currentMarker == ""){
+            Log.d("MARKER_LIMIT", "Marker Limit Reached");
             return;
         }
         MarkerOptions markerOption = new MarkerOptions().position(lat_long_add).title(currentMarker);
-        googleMap.moveCamera(CameraUpdateFactory.newLatLng(lat_long_add));
-        googleMap.addMarker(markerOption).showInfoWindow();
-        current_marker.add(markerOption);
+        Marker marker = googleMap.addMarker(markerOption);
+        marker.showInfoWindow();
+        current_marker.add(marker);
         if(current_marker.size() > 1){
             //draw polyline
-            Log.d("mapclick", "Adding polyline");
+            Log.d("MAP_CLICK", "Adding polyline");
             Polyline polyline = googleMap.addPolyline(new PolylineOptions()
                     .clickable(true)
                     .color(Color.RED)
@@ -330,6 +359,7 @@ public class MapoverlaysActivity extends AppCompatActivity implements OnMapReady
 
             if(current_marker.size() > polygon_sides - 1){
 
+                //Adding final poly line connecting all
                 Polyline polylineEnf = googleMap.addPolyline(new PolylineOptions()
                         .clickable(true)
                         .color(Color.RED)
@@ -339,17 +369,15 @@ public class MapoverlaysActivity extends AppCompatActivity implements OnMapReady
                 );
                 current_poly_lines.add(polyline);
 
+
                 PolygonOptions opts=new PolygonOptions();
 
-                for (MarkerOptions marker: current_marker) {
-                    opts.add(marker.getPosition());
+                for (Marker markerX: current_marker) {
+                    opts.add(markerX.getPosition());
                 }
                 Polygon polygon = googleMap.addPolygon(opts.strokeColor(Color.RED).fillColor(Color.parseColor("#4300ff00")));
                 polygon.setClickable(true);
-            }
-
-        }
-    }
+    }}}
 
     @Override
     public void onMapLongClick(@NonNull LatLng latLng) {
