@@ -6,4 +6,6 @@
     <string name="longitude">Longitude</string>
     <string name="address">Address</string>
     <string name="google_maps_key">AIzaSyCb6mHsu4ph9RCL6a8SucpVhhbcuzh_Jzo</string>
+    <string name="enter_location">Enter Location</string>
+    <string name="add">Add</string>
 </resources>
