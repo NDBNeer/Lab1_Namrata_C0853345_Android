@@ -1,6 +1,7 @@
 package com.lambton.lab1_namrata_c0853345_android;
 
 import android.Manifest;
+import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.location.Address;
 import android.location.Geocoder;
@@ -11,6 +12,8 @@ import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.LinearLayout;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.activity.result.ActivityResultLauncher;
@@ -25,9 +28,12 @@ import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.MapView;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.UiSettings;
+import com.google.android.gms.maps.model.BitmapDescriptor;
+import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.Dot;
 import com.google.android.gms.maps.model.Gap;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.LatLngBounds;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.maps.model.PatternItem;
@@ -35,6 +41,8 @@ import com.google.android.gms.maps.model.Polygon;
 import com.google.android.gms.maps.model.PolygonOptions;
 import com.google.android.gms.maps.model.Polyline;
 import com.google.android.gms.maps.model.PolylineOptions;
+
+import org.json.JSONException;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -51,7 +59,7 @@ public class MapoverlaysActivity extends AppCompatActivity implements OnMapReady
     LatLng lat_long_add;
     Toolbar toolbar;
     // Marker Labels and current markers
-    final String[] markerlabel = new String[]{"A", "B", "C", "D"};
+    ArrayList<String> markerlabel = new ArrayList<String>(Arrays.asList("A", "B", "C", "D"));
     final int polygon_sides = 4;
     ArrayList<MarkerOptions> current_marker = new ArrayList<MarkerOptions>();
     ArrayList<Polyline> current_poly_lines = new ArrayList<Polyline>();
@@ -186,11 +194,20 @@ public class MapoverlaysActivity extends AppCompatActivity implements OnMapReady
         googleMap.setOnPolylineClickListener(this);
 
     }
-    private String findNextMarker(){
-        for(String markerLabel: markerlabel){
 
+    private String nextmarker(){
+        if(markerlabel.size() > 0){
+            String currentMarker =  markerlabel.get(0);
+            markerlabel.remove(0);
+            return currentMarker;
+        }else{
+            return "";
         }
-        return "A";
+    }
+    private void deleteMarker(){}
+    private void sortMarkers(){}
+    private void clearallMarkers(){
+        markerlabel = new ArrayList<String>(Arrays.asList("A", "B", "C", "D"));
     }
     public LatLng getLocationFromAddress(String strAddress) {
 
@@ -219,20 +236,60 @@ public class MapoverlaysActivity extends AppCompatActivity implements OnMapReady
     }
     @Override
     public void onPolylineClick(@NonNull Polyline polyline) {
-        // Flip from solid stroke to dotted stroke pattern.
         if ((polyline.getPattern() == null) || (!polyline.getPattern().contains(DOT))) {
             polyline.setPattern(PATTERN_POLYLINE_DOTTED);
         } else {
             // The default pattern is a solid stroke.
             polyline.setPattern(null);
         }
+        Log.d("map", "Polyline clicked.!");
+        List<LatLng> coordiantesPolyLine = polyline.getPoints();
+        LatLng polylineStart = coordiantesPolyLine.get(0);
+        LatLng polylineEnd = coordiantesPolyLine.get(1);
+        float[] results = new float[1];
+        Location.distanceBetween(polylineStart.latitude, polylineStart.longitude,
+                polylineEnd.latitude, polylineEnd.longitude, results);
 
-        Toast.makeText(this, "Route type " + polyline.getTag().toString(),
-                Toast.LENGTH_SHORT).show();
+        LatLng midPoint = getPolylineCentroid(polyline);
+        Marker centerOneMarker = googleMap.addMarker(new MarkerOptions()
+                .position(midPoint)
+                .icon(makeBitmaptoShowDetails(String.valueOf(results[0]))));
     }
-
     @Override
     public void onPolygonClick(@NonNull Polygon polygon) {
+        googleMap. clear();
+        Log.d("map", "Polygon Clicked.!");
+    }
+
+    public LatLng getPolylineCentroid(Polyline p) {
+
+        LatLngBounds.Builder builder = new LatLngBounds.Builder();
+        for(int i = 0; i < p.getPoints().size(); i++){
+            builder.include(p.getPoints().get(i));
+        }
+
+        LatLngBounds bounds = builder.build();
+
+        return bounds.getCenter();
+    }
+
+    private BitmapDescriptor makeBitmaptoShowDetails(String label){
+        LinearLayout distanceMarkerLayout = (LinearLayout) getLayoutInflater().inflate(R.layout.marker_layout, null);
+
+        distanceMarkerLayout.setDrawingCacheEnabled(true);
+        distanceMarkerLayout.measure(View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED), View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED));
+        distanceMarkerLayout.layout(0, 0, distanceMarkerLayout.getMeasuredWidth(), distanceMarkerLayout.getMeasuredHeight());
+        distanceMarkerLayout.buildDrawingCache(true);
+
+        TextView positionDistance = distanceMarkerLayout.findViewById(R.id.markertext);
+
+        positionDistance.setText(label);
+
+        Bitmap flagBitmap = Bitmap.createBitmap(distanceMarkerLayout.getDrawingCache());
+        distanceMarkerLayout.setDrawingCacheEnabled(false);
+        BitmapDescriptor flagBitmapDescriptor = BitmapDescriptorFactory.fromBitmap(flagBitmap);
+        return  flagBitmapDescriptor;
+
     }
 
     @Override
@@ -251,10 +308,10 @@ public class MapoverlaysActivity extends AppCompatActivity implements OnMapReady
     }
 
     private void addmarkertomap(LatLng lat_long_add) {
-        List<Address> addresses = null;
-        Log.d("MARKER_ADD","lat_long_add null point" + lat_long_add);
-        //adding marker to map
-        String currentMarker = findNextMarker();
+        String currentMarker = nextmarker();
+        if(currentMarker == ""){
+            return;
+        }
         MarkerOptions markerOption = new MarkerOptions().position(lat_long_add).title(currentMarker);
         googleMap.moveCamera(CameraUpdateFactory.newLatLng(lat_long_add));
         googleMap.addMarker(markerOption).showInfoWindow();
@@ -272,10 +329,23 @@ public class MapoverlaysActivity extends AppCompatActivity implements OnMapReady
             current_poly_lines.add(polyline);
 
             if(current_marker.size() > polygon_sides - 1){
-                List<LatLng> polygonPoints;
-                Polygon polygon = googleMap.addPolygon(new PolygonOptions().add(
 
-                ));
+                Polyline polylineEnf = googleMap.addPolyline(new PolylineOptions()
+                        .clickable(true)
+                        .color(Color.RED)
+                        .add(
+                                current_marker.get(0).getPosition(),
+                                current_marker.get(current_marker.size() - 1).getPosition())
+                );
+                current_poly_lines.add(polyline);
+
+                PolygonOptions opts=new PolygonOptions();
+
+                for (MarkerOptions marker: current_marker) {
+                    opts.add(marker.getPosition());
+                }
+                Polygon polygon = googleMap.addPolygon(opts.strokeColor(Color.RED).fillColor(Color.parseColor("#4300ff00")));
+                polygon.setClickable(true);
             }
 
         }
