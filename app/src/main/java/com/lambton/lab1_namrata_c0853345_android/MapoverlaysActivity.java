@@ -250,10 +250,11 @@ public class MapoverlaysActivity extends AppCompatActivity implements OnMapReady
     }
 
     private void addmarkertomap(LatLng lat_long_add) {
+        List<Address> addresses = null;
         Log.d("MARKER_ADD","lat_long_add null point" + lat_long_add);
         //adding marker to map
         // googleMap.addMarker(new MarkerOptions().position(address).title(addresses.get(0).getAddressLine(0))).showInfoWindow();
-        googleMap.addMarker(new MarkerOptions().position(lat_long_add).title("add marker")).showInfoWindow();
+        googleMap.addMarker(new MarkerOptions().position(lat_long_add).title(str_locationadd)).showInfoWindow();
         googleMap.moveCamera(CameraUpdateFactory.newLatLng(lat_long_add));
     }
 }
