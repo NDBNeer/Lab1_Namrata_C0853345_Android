@@ -46,6 +46,9 @@ public class MapoverlaysActivity extends AppCompatActivity implements OnMapReady
     GoogleMap googleMap;
     EditText location_address;
     Button add_location;
+    String str_locationadd;
+    LatLng lat_long_add;
+    boolean flag=false;
     ArrayList<LatLng> cityCoordinates = new ArrayList<LatLng>();
     private static final String MAP_VIEW_BUNDLE_KEY = "MapViewBundleKey";
     //for poliline
@@ -168,86 +171,38 @@ public class MapoverlaysActivity extends AppCompatActivity implements OnMapReady
         uiSettings.setMapToolbarEnabled(true);
         uiSettings.setCompassEnabled(true);
         uiSettings.setZoomControlsEnabled(true);
-        LatLng ny = new LatLng(43.6532, -79.3832);
-        //adding marker to the map
-        MarkerOptions markerOptions = new MarkerOptions();
-        markerOptions.position(ny);
-        googleMap.addMarker(markerOptions);
-        Geocoder geocoder = new Geocoder(this.getApplicationContext(), Locale.getDefault());
-        Geocoder.isPresent();
+        if(flag)
+        {
+            Log.d("lat_long_add******",String.valueOf(lat_long_add));
+            addmarkertomap(lat_long_add);
+        }
+
+    }
+    public LatLng getLocationFromAddress(String strAddress) {
+
+        Geocoder coder = new Geocoder(this);
+        List<Address> address;
+        LatLng p1 = null;
+
         try {
-            addresses = geocoder.getFromLocation(43.6532, -79.3832, 1);
+            address = coder.getFromLocationName(strAddress, 5);
+            if (address == null) {
+                return null;
+            }
+            Log.d("GEOCODE", "Got the location:" + address);
+            Address location = address.get(0);
+            location.getLatitude();
+            location.getLongitude();
+
+            p1 = new LatLng( (location.getLatitude()),
+                    (location.getLongitude()));
+
+            return p1;
         } catch (IOException e) {
             e.printStackTrace();
         }
-        LatLng address = getLocationFromAddress(43.6532, -79.3832);
-        googleMap.addMarker(new MarkerOptions().position(address).title(addresses.get(0).getAddressLine(0))).showInfoWindow();
-        googleMap.moveCamera(CameraUpdateFactory.newLatLng(ny));
-
-        GoogleMap finalGoogleMap = googleMap;
-        googleMap.setOnMapClickListener(new GoogleMap.OnMapClickListener() {
-            @Override
-            public void onMapClick(@NonNull LatLng latLng) {
-                Log.d("OVERLAY", "Clicked at latitude:" + latLng.latitude + " longitude:" + latLng.longitude);
-                cityCoordinates.add(latLng);
-            }
-        });
-        cityCoordinates.add(new LatLng(43.72794780541092, -79.4320173561573));
-        cityCoordinates.add(new LatLng(43.733723496612285, -79.34824928641319));
-        cityCoordinates.add(new LatLng(43.67470019767365, -79.33726295828819));
-        cityCoordinates.add(new LatLng(43.613089684481054, -79.39044613391161));
-        cityCoordinates.add(new LatLng(43.6573606926499, -79.43788502365351));
-        //draw polylines between above points
-        for(int i=1; i < cityCoordinates.size(); i++){
-            Polyline polyline1 = googleMap.addPolyline(new PolylineOptions()
-                    .clickable(true)
-                    .color(Color.parseColor("Red"))
-                    .add(
-                            cityCoordinates.get(i -1),
-                            cityCoordinates.get(i))
-            );
-        }
-        Polyline polyline1 = googleMap.addPolyline(new PolylineOptions()
-                .clickable(true)
-                .color(Color.RED)
-                .add(
-                        cityCoordinates.get(0),
-                        cityCoordinates.get(cityCoordinates.size()-1))
-        );
-        Polygon polygon1 = googleMap.addPolygon(new PolygonOptions()
-                .clickable(true)
-                .add(cityCoordinates.get(0),
-                        cityCoordinates.get(1),
-                        cityCoordinates.get(2),
-                        cityCoordinates.get(3),
-                        cityCoordinates.get(4)
-                )
-                .fillColor(Color.parseColor("#ff00ff00"))
-
-        );
-
-        googleMap.setOnPolylineClickListener(new GoogleMap.OnPolylineClickListener() {
-            @Override
-            public void onPolylineClick(@NonNull Polyline polyline) {
-                List<LatLng> polyLinePoints = polyline.getPoints();
-                float[] results = new float[1];
-                Location.distanceBetween(polyLinePoints.get(0).latitude, polyLinePoints.get(0).longitude,
-                        polyLinePoints.get(1).latitude, polyLinePoints.get(1).longitude, results);
-                Log.d("POLYGON_CLICK", "Calculate Distance between two points of polyline: " + results);
-
-            }
-        });
-
-        googleMap.setOnPolygonClickListener(new GoogleMap.OnPolygonClickListener() {
-            @Override
-            public void onPolygonClick(@NonNull Polygon polygon) {
-                List<LatLng> polygonPoints = polygon.getPoints();
-                float[] results = new float[1];
-                Log.d("POLYGON_CLICK", "Calculate Distance between all points");
-            }
-        });
+        return null;
     }
-
     public LatLng getLocationFromAddress(Double latitude,Double longitude)
     {
         LatLng p1 = null;
@@ -282,6 +237,22 @@ public class MapoverlaysActivity extends AppCompatActivity implements OnMapReady
 
     @Override
     public void onClick(View view) {
+        str_locationadd = location_address.getText().toString();
+        lat_long_add =getLocationFromAddress(str_locationadd);
+        Log.d("lat_long_add", String.valueOf(lat_long_add));
+        flag=true;
 
+    }
+
+    private void addmarkertomap(LatLng lat_long_add) {
+        //adding marker to map
+        MarkerOptions markerOptions = new MarkerOptions();
+        markerOptions.position(lat_long_add);
+        googleMap.addMarker(markerOptions);
+        Geocoder geocoder = new Geocoder(this.getApplicationContext(), Locale.getDefault());
+        Geocoder.isPresent();
+        // googleMap.addMarker(new MarkerOptions().position(address).title(addresses.get(0).getAddressLine(0))).showInfoWindow();
+        googleMap.addMarker(new MarkerOptions().position(lat_long_add).title("add marker")).showInfoWindow();
+        googleMap.moveCamera(CameraUpdateFactory.newLatLng(lat_long_add));
     }
 }
